@@ -9,9 +9,15 @@ import { PodiumScene } from './PodiumScreen.jsx';
 import CinematicCamera from './CinematicCamera.jsx';
 
 export default function EnhancedThreeScene() {
-  const { players, results } = useGame();
+  const players = useGame((state) => state.players);
+  const results = useGame((state) => state.results);
+
   const sorted = useMemo(
-    () => Object.values(players).sort((a, b) => a.lane - b.lane),
+    () => {
+      const sorted = Object.values(players).sort((a, b) => a.lane - b.lane);
+      console.log("[EnhancedThreeScene] Sorted players:", sorted);
+      return sorted;
+    },
     [players]
   );
 

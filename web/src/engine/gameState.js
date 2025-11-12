@@ -14,15 +14,46 @@ export const useGame = create((set, get) => ({
   players: {}, // key: lane -> { lane, name, color, meters, watts, spm, effectiveMeters, shieldUntil, forcedCadenceUntil, metersMultiplierUntil, globalHalfUntil }
   raceDef: null,
   results: null,
-  setRaceDef: (def) => set({ raceDef: def }),
-  setRunning: (running) =>
+  setRaceDef: (def) => {
+    console.log("[gameState] setRaceDef called with", def);
+    set((state) => {
+      const players = { ...state.players };
+
+      if (def && def.boats) {
+        for (const boat of def.boats) {
+          const lane = boat.lane_number;
+          const color = bonuses.autoColor(lane);
+
+          if (!players[lane]) {
+            players[lane] = {
+              lane,
+              name: boat.name || `P${lane}`,
+              color,
+              meters: 0,
+              watts: 0,
+              spm: 0,
+              effectiveMeters: 0,
+            };
+          } else {
+            players[lane].name = boat.name || `P${lane}`;
+          }
+        }
+      }
+
+      console.log("[gameState] Players initialized:", players);
+      return { raceDef: def, players };
+    });
+  },
+  setRunning: (running) => {
+    console.log("[gameState] setRunning called with", running);
     set((state) => ({
       meta: {
         ...state.meta,
         running,
         startTs: running ? Date.now() : state.meta.startTs,
       },
-    })),
+    }));
+  },
   setDuration: (ms) =>
     set((state) => ({ meta: { ...state.meta, durationMs: ms } })),
   checkRaceEnd: () => {
@@ -50,7 +81,7 @@ export const useGame = create((set, get) => ({
     }
   },
   applyRaceData: (packet) => {
-    // packet = { data: [ { lane, meters, watts, spm, ... } ], time }
+    console.log("[gameState] applyRaceData called", packet);
     set((state) => {
       const players = { ...state.players };
       for (const row of packet.data) {

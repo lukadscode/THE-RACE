@@ -2,7 +2,9 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useGame } from '../engine/gameState.js';
 
 export default function ArcadeHUD() {
-  const { players, meta, results } = useGame();
+  const players = useGame((state) => state.players);
+  const meta = useGame((state) => state.meta);
+  const results = useGame((state) => state.results);
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [notifications, setNotifications] = useState([]);
 

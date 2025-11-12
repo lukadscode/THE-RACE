@@ -4,8 +4,15 @@ import useRelaySocket from '../hooks/useRelaySocket.js';
 
 export default function Display2D(){
   useRelaySocket();
-  const { players, meta } = useGame();
-  const list = useMemo(()=>Object.values(players).sort((a,b)=>(b.effectiveMeters||0)-(a.effectiveMeters||0)), [players]);
+  const players = useGame((state) => state.players);
+  const meta = useGame((state) => state.meta);
+
+  const list = useMemo(() => {
+    const sorted = Object.values(players).sort((a,b)=>(b.effectiveMeters||0)-(a.effectiveMeters||0));
+    console.log("[Display2D] Players list:", sorted);
+    return sorted;
+  }, [players]);
+
   const leader = list[0]?.effectiveMeters ?? 1;
   return (
     <div className="page">

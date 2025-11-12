@@ -33,17 +33,23 @@ export function connectRelay(simulationConfig = null) {
       return;
     }
     const { type, payload } = msg;
+    console.log(`[ergClient] Received message type: ${type}`, payload);
+
     if (type === "race_definition") {
+      console.log("[ergClient] Processing race_definition");
       useGame.getState().setRaceDef(payload);
       if (payload.duration) useGame.getState().setDuration(payload.duration);
     } else if (type === "race_status") {
+      console.log("[ergClient] Processing race_status, state:", payload.state);
       const running = payload.state === 9;
       useGame.getState().setRunning(running);
       if (!running && payload.state === 11) {
+        console.log("[ergClient] Race complete");
       }
     } else if (type === "race_data") {
       useGame.getState().applyRaceData(payload);
     } else if (type === "race_results") {
+      console.log("[ergClient] Processing race_results");
       useGame.getState().setResults(payload);
     }
   };
