@@ -57,7 +57,7 @@ export default function Home() {
   return (
     <div className="home-container">
       <div className="home-hero">
-        <h1 className="hero-title">ERGKART</h1>
+        <h1 className="hero-title">THE RACE</h1>
         <p className="hero-subtitle">Indoor Rowing Racing Experience</p>
       </div>
 

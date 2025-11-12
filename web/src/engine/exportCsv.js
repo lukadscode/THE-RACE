@@ -1,4 +1,4 @@
-export function exportCSV(players, filename = "ergkart_results.csv") {
+export function exportCSV(players, filename = "the_race_results.csv") {
   const arr = Object.values(players).map((p) => ({
     lane: p.lane,
     name: p.name,

@@ -31,7 +31,7 @@ export default function Display3D(){
         numKarts,
         duration,
         names,
-        eventName: 'ERGKART SIMULATION'
+        eventName: 'THE RACE SIMULATION'
       };
 
       setDuration(duration);

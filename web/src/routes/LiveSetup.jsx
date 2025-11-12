@@ -103,7 +103,7 @@ export default function LiveSetup() {
   return (
     <div className="home-container">
       <div className="home-hero">
-        <h1 className="hero-title">ERGKART - MODE LIVE</h1>
+        <h1 className="hero-title">THE RACE - MODE LIVE</h1>
         <p className="hero-subtitle">Connexion à ErgRace</p>
       </div>
 
