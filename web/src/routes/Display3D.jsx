@@ -19,6 +19,7 @@ export default function Display3D(){
     initAudio();
 
     const isDemo = searchParams.get('demo') === '1';
+    const isLive = searchParams.get('live') === '1';
 
     if (isDemo) {
       const numKarts = parseInt(searchParams.get('numKarts')) || 8;
@@ -36,6 +37,8 @@ export default function Display3D(){
       setDuration(duration);
       setSimulationConfig(config);
       setShowCountdown(true);
+    } else if (isLive) {
+      setShowCountdown(true);
     } else {
       const ws = connectRelay(null);
       setWsRef(ws);
@@ -48,10 +51,8 @@ export default function Display3D(){
 
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
-    if (simulationConfig) {
-      const ws = connectRelay(simulationConfig);
-      setWsRef(ws);
-    }
+    const ws = connectRelay(simulationConfig);
+    setWsRef(ws);
   }, [simulationConfig]);
 
   return (

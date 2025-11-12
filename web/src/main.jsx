@@ -6,6 +6,7 @@ import Home from './routes/Home.jsx';
 import Admin from './routes/Admin.jsx';
 import Display3D from './routes/Display3D.jsx';
 import Display2D from './routes/Display2D.jsx';
+import LiveSetup from './routes/LiveSetup.jsx';
 import './styles.css';
 import './countdown.css';
 
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')).render(
     <Routes>
       <Route element={<App />}>
         <Route path="/" element={<Home />} />
+        <Route path="/live-setup" element={<LiveSetup />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/display/3d" element={<Display3D />} />
         <Route path="/display/2d" element={<Display2D />} />

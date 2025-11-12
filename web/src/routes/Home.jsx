@@ -50,7 +50,7 @@ export default function Home() {
       localStorage.setItem('simulation-config', JSON.stringify(config));
       navigate(`/display/3d?${params.toString()}`);
     } else {
-      navigate('/display/3d');
+      navigate('/live-setup');
     }
   };
 
