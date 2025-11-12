@@ -6,8 +6,9 @@ export default function App() {
   return (
     <div className="layout">
       <header className="topbar">
-        <div className="brand">🏁 ErgKart</div>
+        <Link to="/" className="brand">🏁 ErgKart</Link>
         <nav>
+          <Link className={loc.pathname === '/' ? 'active' : ''} to="/">Home</Link>
           <Link className={loc.pathname.includes('/admin') ? 'active' : ''} to="/admin">Admin</Link>
           <Link className={loc.pathname.includes('/display/3d') ? 'active' : ''} to="/display/3d">Vue 3D</Link>
           <Link className={loc.pathname.includes('/display/2d') ? 'active' : ''} to="/display/2d">Vue 2D</Link>

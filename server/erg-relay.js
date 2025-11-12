@@ -19,6 +19,7 @@ let erg;
 let clients = new Set();
 let lastRaceDefinition = null;
 let lastStatus = null;
+let currentSimulation = null;
 
 // Broadcast helper
 const broadcast = (type, payload) => {
@@ -38,6 +39,22 @@ wss.on("connection", (ws) => {
     );
   if (lastStatus)
     ws.send(JSON.stringify({ type: "race_status", payload: lastStatus }));
+
+  ws.on("message", (buf) => {
+    try {
+      const msg = JSON.parse(buf.toString());
+      if (msg.type === "start_simulation") {
+        console.log("[relay] Starting custom simulation", msg.config);
+        if (currentSimulation) {
+          currentSimulation.stop();
+        }
+        startCustomDemo(msg.config);
+      }
+    } catch (e) {
+      console.log("[relay] Invalid message from client", e.message);
+    }
+  });
+
   ws.on("close", () => clients.delete(ws));
 });
 
@@ -137,6 +154,80 @@ function startDemo() {
       broadcast("race_status", { state: 11, state_desc: "race complete" });
     }
   };
+  tick();
+}
+
+function startCustomDemo(config = {}) {
+  const lanes = config.numKarts || 8;
+  const durationMs = config.duration || (7 * 60 * 1000 + 30 * 1000);
+  const names = config.names || Array.from({ length: lanes }, (_, i) => `Player ${i + 1}`);
+
+  let meters = Array.from({ length: lanes }, () => 0);
+  let watts = Array.from({ length: lanes }, () => 150 + Math.random() * 150);
+  let spm = Array.from({ length: lanes }, () => 22 + Math.random() * 8);
+  let running = true;
+
+  const race_definition = {
+    boats: Array.from({ length: lanes }, (_, i) => ({
+      name: names[i] || `Player ${i + 1}`,
+      lane_number: i + 1,
+      is_paceboat: 0,
+      machine_type: "row",
+    })),
+    duration: durationMs,
+    duration_type: "time",
+    race_type: "individual",
+    event_name: config.eventName || "ERGKART SIMULATION",
+  };
+
+  lastRaceDefinition = race_definition;
+  broadcast("race_definition", race_definition);
+  lastStatus = { state: 9, state_desc: "race running" };
+  broadcast("race_status", lastStatus);
+  const start = Date.now();
+
+  const tick = () => {
+    if (!running) return;
+    const t = Date.now() - start;
+    for (let i = 0; i < lanes; i++) {
+      const v = 0.1 * Math.sqrt(watts[i] / 2);
+      meters[i] += v * 0.2;
+      watts[i] += (Math.random() - 0.5) * 10;
+      spm[i] += (Math.random() - 0.5) * 1;
+    }
+    const data = {
+      data: meters.map((m, idx) => ({
+        lane: idx + 1,
+        meters: Math.floor(m),
+        watts: Math.max(0, Math.floor(watts[idx])),
+        spm: Math.max(16, Math.floor(spm[idx])),
+        position: 0,
+        time: Math.max(0, durationMs - t),
+        is_paceboat: 0,
+        erg_status: "1",
+      })),
+      time: Math.max(0, durationMs - t),
+    };
+    broadcast("race_data", data);
+    if (t < durationMs && running) {
+      currentSimulation.timeout = setTimeout(tick, 200);
+    } else {
+      running = false;
+      broadcast("race_status", { state: 11, state_desc: "race complete" });
+      currentSimulation = null;
+    }
+  };
+
+  currentSimulation = {
+    stop: () => {
+      running = false;
+      if (currentSimulation && currentSimulation.timeout) {
+        clearTimeout(currentSimulation.timeout);
+      }
+    },
+    timeout: null
+  };
+
   tick();
 }
 

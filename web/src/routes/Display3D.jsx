@@ -1,16 +1,41 @@
 import React, { useEffect } from 'react';
-import useRelaySocket from '../hooks/useRelaySocket.js';
+import { useSearchParams } from 'react-router-dom';
+import { connectRelay } from '../engine/ergClient.js';
 import EnhancedThreeScene from '../components/EnhancedThreeScene.jsx';
 import ArcadeHUD from '../components/ArcadeHUD.jsx';
 import { PodiumOverlay } from '../components/PodiumScreen.jsx';
 import { initAudio } from '../utils/AudioManager.js';
+import { useGame } from '../engine/gameState.js';
 
 export default function Display3D(){
-  useRelaySocket();
+  const [searchParams] = useSearchParams();
+  const { setDuration } = useGame();
 
   useEffect(() => {
     initAudio();
-  }, []);
+
+    const isDemo = searchParams.get('demo') === '1';
+    let simulationConfig = null;
+
+    if (isDemo) {
+      const numKarts = parseInt(searchParams.get('numKarts')) || 8;
+      const duration = parseInt(searchParams.get('duration')) || (7 * 60 * 1000 + 30 * 1000);
+      const namesParam = searchParams.get('names');
+      const names = namesParam ? namesParam.split(',') : Array.from({ length: numKarts }, (_, i) => `Player ${i + 1}`);
+
+      simulationConfig = {
+        numKarts,
+        duration,
+        names,
+        eventName: 'ERGKART SIMULATION'
+      };
+
+      setDuration(duration);
+    }
+
+    const ws = connectRelay(simulationConfig);
+    return () => ws.close();
+  }, [searchParams]);
 
   return (
     <div className="canvas-wrap">
