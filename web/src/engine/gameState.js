@@ -179,7 +179,9 @@ export const useGame = create((set, get) => ({
         bonuses.rollAndApply(meta, players, order);
       }
 
-      meta.timeRemaining = packet.time ?? meta.timeRemaining;
+      // Conversion du temps ErgRace: time en centisecondes (1000 = 100s)
+      const timeInMs = packet.time ? packet.time * 100 : meta.timeRemaining;
+      meta.timeRemaining = timeInMs;
       return { players, meta };
     });
     get().checkRaceEnd();

@@ -5,18 +5,21 @@ import EnhancedThreeScene from '../components/EnhancedThreeScene.jsx';
 import ArcadeHUD from '../components/ArcadeHUD.jsx';
 import { PodiumOverlay } from '../components/PodiumScreen.jsx';
 import CountdownOverlay from '../components/CountdownOverlay.jsx';
+import ErgRaceCountdown from '../components/ErgRaceCountdown.jsx';
 import { initAudio } from '../utils/AudioManager.js';
 import { useGame } from '../engine/gameState.js';
 
 export default function Display3D(){
   const [searchParams] = useSearchParams();
-  const { setDuration } = useGame();
+  const { setDuration, resetRace } = useGame();
   const [showCountdown, setShowCountdown] = useState(false);
   const [simulationConfig, setSimulationConfig] = useState(null);
   const [wsRef, setWsRef] = useState(null);
+  const [isLiveMode, setIsLiveMode] = useState(false);
 
   useEffect(() => {
     initAudio();
+    resetRace();
 
     const isDemo = searchParams.get('demo') === '1';
     const liveMode = searchParams.get('live') === '1';
@@ -37,11 +40,14 @@ export default function Display3D(){
       setDuration(duration);
       setSimulationConfig(config);
       setShowCountdown(true);
+      setIsLiveMode(false);
     } else if (liveMode) {
       console.log('[Display3D] Mode LIVE - Connection au relay sans simulation');
+      setIsLiveMode(true);
       const ws = connectRelay(null);
       setWsRef(ws);
     } else {
+      setIsLiveMode(false);
       const ws = connectRelay(null);
       setWsRef(ws);
     }
@@ -49,7 +55,7 @@ export default function Display3D(){
     return () => {
       if (wsRef) wsRef.close();
     };
-  }, [searchParams, setDuration]);
+  }, [searchParams, setDuration, resetRace]);
 
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
@@ -66,6 +72,7 @@ export default function Display3D(){
       <ArcadeHUD />
       <PodiumOverlay />
       {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
+      {isLiveMode && <ErgRaceCountdown />}
     </div>
   );
 }

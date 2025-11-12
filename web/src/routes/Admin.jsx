@@ -10,6 +10,31 @@ export default function Admin(){
   const [dur, setDur] = useState((raceDef?.duration)||DEFAULT_DURATION_MS);
   const list = useMemo(()=>Object.values(players).sort((a,b)=>(b.effectiveMeters||0)-(a.effectiveMeters||0)), [players]);
 
+  const handleStopRace = () => {
+    useGame.setState({
+      meta: {
+        running: false,
+        raceStartTime: null,
+        timeLeft: dur
+      }
+    });
+    console.log('[Admin] Course arrêtée');
+  };
+
+  const handleFullReset = () => {
+    resetRace();
+    useGame.setState({
+      players: {},
+      meta: {
+        running: false,
+        raceStartTime: null,
+        timeLeft: dur
+      },
+      raceDef: null
+    });
+    console.log('[Admin] Reset complet effectué');
+  };
+
   return (
     <div className="page">
       <div className="grid">
@@ -22,6 +47,14 @@ export default function Admin(){
             <div style={{display:'flex', gap:8}}>
               <button className="btn" onClick={()=>setDuration(dur)}>Appliquer</button>
               <button className="btn" onClick={()=>resetRace()}>Reset local</button>
+            </div>
+            <div style={{display:'flex', gap:8, marginTop:8}}>
+              <button className="btn" style={{background:'#ff6600', color:'#fff'}} onClick={handleStopRace}>
+                Arrêter la course
+              </button>
+              <button className="btn" style={{background:'#ff0000', color:'#fff'}} onClick={handleFullReset}>
+                Reset complet
+              </button>
             </div>
             <div>Statut: {meta.running ? <span className="badge ok">En course</span> : <span className="badge warn">Arrêt</span>}</div>
             <div>Passage bonus tous les 200 m</div>
