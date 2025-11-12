@@ -33,12 +33,16 @@ const broadcast = (type, payload) => {
 wss.on("connection", (ws) => {
   clients.add(ws);
   ws.send(JSON.stringify({ type: "hello", payload: { demo: DEMO } }));
-  if (lastRaceDefinition)
+
+  if (lastRaceDefinition && lastStatus?.state !== 11 && lastStatus?.state !== 13) {
     ws.send(
       JSON.stringify({ type: "race_definition", payload: lastRaceDefinition })
     );
-  if (lastStatus)
+  }
+
+  if (lastStatus && lastStatus.state !== 11 && lastStatus.state !== 13) {
     ws.send(JSON.stringify({ type: "race_status", payload: lastStatus }));
+  }
 
   ws.on("message", (buf) => {
     try {
@@ -49,6 +53,15 @@ wss.on("connection", (ws) => {
           currentSimulation.stop();
         }
         startCustomDemo(msg.config);
+      } else if (msg.type === "reset_race") {
+        console.log("[relay] Reset race requested");
+        lastRaceDefinition = null;
+        lastStatus = null;
+        if (currentSimulation) {
+          currentSimulation.stop();
+          currentSimulation = null;
+        }
+        broadcast("race_status", { state: 0, state_desc: "reset" });
       }
     } catch (e) {
       console.log("[relay] Invalid message from client", e.message);
@@ -86,8 +99,14 @@ const connectErg = () => {
     } else if (msg.race_status) {
       lastStatus = msg.race_status;
       broadcast("race_status", msg.race_status);
+
+      if (msg.race_status.state === 0 || msg.race_status.state === 13) {
+        console.log("[relay] Race reset/cleared by ErgRace");
+        lastRaceDefinition = null;
+        lastStatus = null;
+      }
     } else if (msg.race_data) {
-      broadcast("race_data", msg.race_data); // data.data[] et time
+      broadcast("race_data", msg.race_data);
     } else if (msg.race_results) {
       broadcast("race_results", msg.race_results);
     }

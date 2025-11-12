@@ -3,6 +3,7 @@ import { useGame } from '../engine/gameState.js';
 import { DEFAULT_DURATION_MS } from '../engine/constants.js';
 import { exportCSV } from '../engine/exportCsv.js';
 import useRelaySocket from '../hooks/useRelaySocket.js';
+import { resetRaceOnRelay } from '../engine/ergClient.js';
 
 export default function Admin(){
   useRelaySocket();
@@ -23,6 +24,7 @@ export default function Admin(){
 
   const handleFullReset = () => {
     resetRace();
+    resetRaceOnRelay();
     useGame.setState({
       players: {},
       meta: {

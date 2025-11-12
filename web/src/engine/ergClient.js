@@ -88,3 +88,12 @@ export function resumeSimulation() {
 export function stopSimulation() {
   sendControl("stop_simulation");
 }
+
+export function resetRaceOnRelay() {
+  if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+    wsInstance.send(JSON.stringify({ type: "reset_race" }));
+    console.log("[ergClient] Reset race sent to relay");
+  } else {
+    console.warn("[ergClient] Cannot send reset_race, socket closed");
+  }
+}
