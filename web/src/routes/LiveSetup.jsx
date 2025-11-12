@@ -47,6 +47,17 @@ export default function LiveSetup() {
               setDuration(def.duration);
             }
           }
+
+          if (data.race_status) {
+            const status = data.race_status;
+            console.log('[LiveSetup] Race status:', status.state, status.state_desc);
+
+            if (status.state === 4) {
+              console.log('[LiveSetup] SIT READY detected - Auto-launching Display3D');
+              websocket.close();
+              navigate('/display/3d?live=1');
+            }
+          }
         } catch (e) {
           console.error('[LiveSetup] Error parsing message:', e);
         }
@@ -274,14 +285,24 @@ export default function LiveSetup() {
               </div>
             </div>
 
-            <button
-              className="btn-start-race"
-              onClick={handleStartRace}
-              style={{ marginTop: '20px' }}
-            >
-              <span className="btn-icon">🏁</span>
-              <span className="btn-text">Lancer la Course</span>
-            </button>
+            <div style={{
+              padding: '20px',
+              background: 'rgba(0, 255, 136, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid #00ff88',
+              color: '#00ff88',
+              textAlign: 'center',
+              marginTop: '20px',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>⏳</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                En attente du départ de la course
+              </div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                La vue 3D se lancera automatiquement dès que ErgRace enverra le signal "SIT READY"
+              </div>
+            </div>
           </>
         )}
 
