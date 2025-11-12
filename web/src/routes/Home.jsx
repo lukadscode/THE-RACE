@@ -36,6 +36,7 @@ export default function Home() {
 
   const handleStartRace = () => {
     const totalMs = (config.durationMinutes * 60 + config.durationSeconds) * 1000;
+    resetRace();
     setDuration(totalMs);
 
     if (config.mode === 'demo') {
@@ -43,7 +44,7 @@ export default function Home() {
         demo: '1',
         numKarts: config.numKarts.toString(),
         duration: totalMs.toString(),
-        names: config.kartNames.join(',')
+        names: config.kartNames.filter(n => n).join(',')
       });
 
       localStorage.setItem('simulation-config', JSON.stringify(config));

@@ -7,6 +7,7 @@ import Admin from './routes/Admin.jsx';
 import Display3D from './routes/Display3D.jsx';
 import Display2D from './routes/Display2D.jsx';
 import './styles.css';
+import './countdown.css';
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>

@@ -1,21 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { connectRelay } from '../engine/ergClient.js';
 import EnhancedThreeScene from '../components/EnhancedThreeScene.jsx';
 import ArcadeHUD from '../components/ArcadeHUD.jsx';
 import { PodiumOverlay } from '../components/PodiumScreen.jsx';
+import CountdownOverlay from '../components/CountdownOverlay.jsx';
 import { initAudio } from '../utils/AudioManager.js';
 import { useGame } from '../engine/gameState.js';
 
 export default function Display3D(){
   const [searchParams] = useSearchParams();
   const { setDuration } = useGame();
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [simulationConfig, setSimulationConfig] = useState(null);
+  const [wsRef, setWsRef] = useState(null);
 
   useEffect(() => {
     initAudio();
 
     const isDemo = searchParams.get('demo') === '1';
-    let simulationConfig = null;
 
     if (isDemo) {
       const numKarts = parseInt(searchParams.get('numKarts')) || 8;
@@ -23,7 +26,7 @@ export default function Display3D(){
       const namesParam = searchParams.get('names');
       const names = namesParam ? namesParam.split(',') : Array.from({ length: numKarts }, (_, i) => `Player ${i + 1}`);
 
-      simulationConfig = {
+      const config = {
         numKarts,
         duration,
         names,
@@ -31,17 +34,32 @@ export default function Display3D(){
       };
 
       setDuration(duration);
+      setSimulationConfig(config);
+      setShowCountdown(true);
+    } else {
+      const ws = connectRelay(null);
+      setWsRef(ws);
     }
 
-    const ws = connectRelay(simulationConfig);
-    return () => ws.close();
-  }, [searchParams]);
+    return () => {
+      if (wsRef) wsRef.close();
+    };
+  }, [searchParams, setDuration]);
+
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
+    if (simulationConfig) {
+      const ws = connectRelay(simulationConfig);
+      setWsRef(ws);
+    }
+  }, [simulationConfig]);
 
   return (
     <div className="canvas-wrap">
       <EnhancedThreeScene />
       <ArcadeHUD />
       <PodiumOverlay />
+      {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
     </div>
   );
 }

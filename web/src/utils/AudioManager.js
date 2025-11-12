@@ -74,7 +74,12 @@ class AudioManager {
   }
 
   playCountdown() {
-    this.createBeep(440, 0.15, 0.4);
+    this.createBeep(660, 0.2, 0.5);
+  }
+
+  playGoSound() {
+    this.createBeep(880, 0.3, 0.6);
+    setTimeout(() => this.createBeep(1100, 0.3, 0.6), 150);
   }
 
   playLapMarker() {
@@ -143,4 +148,8 @@ export function playRaceEndSound() {
 
 export function playCountdownSound() {
   audioManager.playCountdown();
+}
+
+export function playGoSound() {
+  audioManager.playGoSound();
 }
