@@ -19,7 +19,7 @@ export default function Display3D(){
     initAudio();
 
     const isDemo = searchParams.get('demo') === '1';
-    const isLive = searchParams.get('live') === '1';
+    const liveMode = searchParams.get('live') === '1';
 
     if (isDemo) {
       const numKarts = parseInt(searchParams.get('numKarts')) || 8;
@@ -37,8 +37,10 @@ export default function Display3D(){
       setDuration(duration);
       setSimulationConfig(config);
       setShowCountdown(true);
-    } else if (isLive) {
-      setShowCountdown(true);
+    } else if (liveMode) {
+      console.log('[Display3D] Mode LIVE - Connection au relay sans simulation');
+      const ws = connectRelay(null);
+      setWsRef(ws);
     } else {
       const ws = connectRelay(null);
       setWsRef(ws);
@@ -51,8 +53,11 @@ export default function Display3D(){
 
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
-    const ws = connectRelay(simulationConfig);
-    setWsRef(ws);
+    if (simulationConfig) {
+      console.log('[Display3D] Countdown terminé - Démarrage simulation avec config:', simulationConfig);
+      const ws = connectRelay(simulationConfig);
+      setWsRef(ws);
+    }
   }, [simulationConfig]);
 
   return (
