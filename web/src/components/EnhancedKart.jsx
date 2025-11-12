@@ -1,10 +1,21 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Text } from '@react-three/drei';
 import { useGame } from '../engine/gameState.js';
 import { BoostParticles, ShieldEffect } from './effects/ParticleSystem.jsx';
 import * as THREE from 'three';
+import { buildKartPalette } from '../utils/color.js';
 
-export default function EnhancedKart({ color='#6cf', lane=1, meters=0, index=0 }) {
+const LANE_SPACING = 1.4;
+
+export default function EnhancedKart({
+  color = '#6cf',
+  lane = 1,
+  meters = 0,
+  index = 0,
+  laneMin = 1,
+  laneMax = 1
+}) {
   const kartRef = useRef();
   const wheelRefs = useRef([]);
   const [targetX, setTargetX] = useState((meters/10) - 60);
@@ -18,14 +29,13 @@ export default function EnhancedKart({ color='#6cf', lane=1, meters=0, index=0 }
   const player = players[lane];
 
   const x = (meters/10) - 60;
-  const z = (lane - 8) * 0.8;
+  const laneCenter = (laneMin + laneMax) / 2;
+  const z = (lane - laneCenter) * LANE_SPACING;
 
-  const bodyColor = useMemo(() => color, [color]);
-  const accentColor = useMemo(() => {
-    const c = new THREE.Color(color);
-    c.multiplyScalar(0.6);
-    return '#' + c.getHexString();
-  }, [color]);
+  const { bodyColor, accentColor, trimColor, stripeColor, glowColor } = useMemo(
+    () => buildKartPalette(color),
+    [color]
+  );
 
   useEffect(() => {
     if (player) {
@@ -73,120 +83,114 @@ export default function EnhancedKart({ color='#6cf', lane=1, meters=0, index=0 }
   });
 
   return (
-    <group ref={kartRef} position={[x, 0.5, z]}>
-      <mesh castShadow>
-        <boxGeometry args={[1.6, 0.6, 0.9]} />
+    <group ref={kartRef} position={[x, 0.45, z]}>
+      <mesh castShadow position={[0, -0.15, 0]}>
+        <boxGeometry args={[1.8, 0.1, 1.1]} />
+        <meshStandardMaterial
+          color={trimColor}
+          metalness={0.7}
+          roughness={0.25}
+        />
+      </mesh>
+
+      <mesh castShadow position={[0.1, 0.05, 0]}>
+        <boxGeometry args={[1.6, 0.3, 0.9]} />
         <meshStandardMaterial
           color={bodyColor}
-          metalness={0.7}
-          roughness={0.2}
-          emissive={isBoost ? bodyColor : '#000000'}
-          emissiveIntensity={isBoost ? 0.4 : 0}
+          metalness={0.5}
+          roughness={0.35}
         />
       </mesh>
 
-      <mesh position={[0.5, 0.1, 0]} castShadow>
-        <boxGeometry args={[0.6, 0.4, 0.8]} />
+      <mesh castShadow position={[0.45, 0.35, 0]}>
+        <boxGeometry args={[0.7, 0.35, 0.7]} />
         <meshStandardMaterial
           color={accentColor}
-          metalness={0.8}
-          roughness={0.2}
+          metalness={0.4}
+          roughness={0.35}
         />
       </mesh>
 
-      <mesh position={[-0.4, 0.05, 0]} castShadow>
-        <boxGeometry args={[0.8, 0.3, 0.7]} />
+      <mesh castShadow position={[-0.35, 0.25, 0]}>
+        <boxGeometry args={[0.7, 0.25, 0.75]} />
         <meshStandardMaterial
           color={accentColor}
+          metalness={0.4}
+          roughness={0.4}
+        />
+      </mesh>
+
+      <mesh castShadow position={[-0.75, 0.15, 0]}>
+        <boxGeometry args={[0.3, 0.2, 0.8]} />
+        <meshStandardMaterial
+          color={trimColor}
+          metalness={0.5}
+          roughness={0.4}
+        />
+      </mesh>
+
+      <mesh castShadow position={[0.8, 0.1, 0]}>
+        <boxGeometry args={[0.3, 0.2, 0.9]} />
+        <meshStandardMaterial
+          color={trimColor}
           metalness={0.6}
+          roughness={0.35}
+        />
+      </mesh>
+
+      <mesh castShadow position={[0.2, 0.35, 0]}>
+        <boxGeometry args={[1.0, 0.05, 0.95]} />
+        <meshStandardMaterial
+          color={stripeColor}
+          metalness={0.3}
           roughness={0.3}
         />
       </mesh>
 
-      {[ -0.6, 0.6 ].map((dx, i) => (
-        [ -0.35, 0.35 ].map((dz, j) => (
-          <group key={`${i}-${j}`} position={[dx, -0.15, dz]}>
+      {[ -0.75, 0.75 ].map((dx, i) => (
+        [ -0.45, 0.45 ].map((dz, j) => (
+          <group key={`${i}-${j}`} position={[dx, -0.2, dz]}>
             <mesh
               ref={el => wheelRefs.current[i * 2 + j] = el}
               rotation={[0, 0, Math.PI / 2]}
               castShadow
             >
-              <cylinderGeometry args={[0.2, 0.2, 0.2, 16]} />
-              <meshStandardMaterial color="#1a1a1a" metalness={0.9} roughness={0.1} />
+              <cylinderGeometry args={[0.22, 0.22, 0.25, 18]} />
+              <meshStandardMaterial color={trimColor} metalness={0.6} roughness={0.3} />
             </mesh>
             <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.2, 0.05, 8, 16]} />
-              <meshStandardMaterial color={bodyColor} metalness={0.8} roughness={0.2} />
+              <torusGeometry args={[0.22, 0.05, 12, 24]} />
+              <meshStandardMaterial color="#111111" metalness={0.2} roughness={0.5} />
             </mesh>
           </group>
         ))
       ))}
 
-      <mesh position={[0, 0.5, 0]} castShadow>
-        <boxGeometry args={[1.0, 0.25, 0.6]} />
+      <mesh position={[0.9, 0.25, 0]} rotation={[0, Math.PI / 12, 0]}>
+        <boxGeometry args={[0.5, 0.12, 0.8]} />
         <meshStandardMaterial
-          color="#111111"
-          transparent
-          opacity={0.3}
-          metalness={0.95}
-          roughness={0.05}
+          color={stripeColor}
+          metalness={0.35}
+          roughness={0.3}
         />
       </mesh>
 
-      <mesh position={[0.6, 0.25, 0.46]}>
-        <circleGeometry args={[0.18, 32]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive="#ffffff"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-      <mesh position={[0.6, 0.25, 0.465]}>
-        <circleGeometry args={[0.14, 32]} />
-        <meshStandardMaterial
-          color={bodyColor}
-          emissive={bodyColor}
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-
-      <mesh position={[0.6, 0.25, -0.46]} rotation={[0, Math.PI, 0]}>
-        <circleGeometry args={[0.18, 32]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive="#ffffff"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-      <mesh position={[0.6, 0.25, -0.465]} rotation={[0, Math.PI, 0]}>
-        <circleGeometry args={[0.14, 32]} />
-        <meshStandardMaterial
-          color={bodyColor}
-          emissive={bodyColor}
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-
-      <mesh position={[0.7, 0.15, 0]}>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshStandardMaterial
-          color={isBoost ? '#ffff00' : '#ff3300'}
-          emissive={isBoost ? '#ffff00' : '#ff3300'}
-          emissiveIntensity={1.5}
-        />
-      </mesh>
-      <mesh position={[-0.7, 0.15, 0]}>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshStandardMaterial
-          color={isBoost ? '#ffff00' : '#ff3300'}
-          emissive={isBoost ? '#ffff00' : '#ff3300'}
-          emissiveIntensity={1.5}
-        />
-      </mesh>
+      <Text
+        position={[-0.95, 0.35, 0]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.32}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#000000"
+      >
+        {lane}
+      </Text>
 
       <BoostParticles
         position={[currentX - 0.8, 0.3, z]}
-        color={bodyColor}
+        color={glowColor}
         active={isBoost}
       />
 
@@ -196,12 +200,12 @@ export default function EnhancedKart({ color='#6cf', lane=1, meters=0, index=0 }
       />
 
       {speed > 5 && (
-        <mesh position={[-0.8, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <coneGeometry args={[0.2, 0.6, 8]} />
+        <mesh position={[-1.0, 0.05, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <coneGeometry args={[0.22, 0.7, 8]} />
           <meshBasicMaterial
-            color={bodyColor}
+            color={glowColor}
             transparent
-            opacity={0.6}
+            opacity={0.55}
           />
         </mesh>
       )}

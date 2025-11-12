@@ -7,7 +7,13 @@ import Track from './Track.jsx';
 
 export default function ThreeScene(){
   const { players } = useGame();
-  const sorted = useMemo(()=>Object.values(players).sort((a,b)=>(a.lane)-(b.lane)), [players]);
+  const sorted = useMemo(
+    () => Object.values(players).sort((a, b) => (a.lane) - (b.lane)),
+    [players]
+  );
+  const laneNumbers = useMemo(() => sorted.map((p) => p.lane), [sorted]);
+  const laneMin = laneNumbers.length ? Math.min(...laneNumbers) : 1;
+  const laneMax = laneNumbers.length ? Math.max(...laneNumbers) : 1;
 
   return (
     <Canvas camera={{ position:[0,12,24], fov:55 }}>
@@ -15,7 +21,15 @@ export default function ThreeScene(){
       <directionalLight position={[10,20,10]} intensity={1.1} />
       <Track />
       {sorted.map((p, idx)=>(
-        <Kart key={p.lane} color={p.color} lane={p.lane} meters={p.effectiveMeters||0} index={idx}/>
+        <Kart
+          key={p.lane}
+          color={p.color}
+          lane={p.lane}
+          meters={p.effectiveMeters||0}
+          index={idx}
+          laneMin={laneMin}
+          laneMax={laneMax}
+        />
       ))}
       <OrbitControls enablePan={false} />
     </Canvas>

@@ -42,7 +42,7 @@ export function connectRelay(simulationConfig = null) {
     } else if (type === "race_status") {
       console.log("[ergClient] Processing race_status, state:", payload.state);
       const running = payload.state === 9;
-      useGame.getState().setRunning(running);
+      useGame.getState().setRaceStatus(payload);
       if (!running && payload.state === 11) {
         console.log("[ergClient] Race complete");
       }
@@ -67,4 +67,24 @@ export function sendSimulationConfig(config) {
       config
     }));
   }
+}
+
+function sendControl(type) {
+  if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+    wsInstance.send(JSON.stringify({ type }));
+  } else {
+    console.warn(`[ergClient] Impossible d'envoyer ${type}, socket fermée`);
+  }
+}
+
+export function pauseSimulation() {
+  sendControl("pause_simulation");
+}
+
+export function resumeSimulation() {
+  sendControl("resume_simulation");
+}
+
+export function stopSimulation() {
+  sendControl("stop_simulation");
 }

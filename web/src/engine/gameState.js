@@ -6,10 +6,14 @@ import { playRaceEndSound } from "../utils/AudioManager.js";
 export const useGame = create((set, get) => ({
   meta: {
     running: false,
+    paused: false,
     startTs: null,
     durationMs: null,
     lastBonusAt: 0,
     raceEnded: false,
+    statusCode: null,
+    statusDesc: null,
+    timeRemaining: null,
   },
   players: {}, // key: lane -> { lane, name, color, meters, watts, spm, effectiveMeters, shieldUntil, forcedCadenceUntil, metersMultiplierUntil, globalHalfUntil }
   raceDef: null,
@@ -45,14 +49,55 @@ export const useGame = create((set, get) => ({
     });
   },
   setRunning: (running) => {
-    console.log("[gameState] setRunning called with", running);
+    console.log("[gameState] setRunning called avec compatibilité legacy", running);
     set((state) => ({
       meta: {
         ...state.meta,
         running,
-        startTs: running ? Date.now() : state.meta.startTs,
+        paused: running ? false : state.meta.paused,
+        startTs: running && !state.meta.startTs ? Date.now() : state.meta.startTs,
       },
     }));
+  },
+  setRaceStatus: (status) => {
+    console.log("[gameState] setRaceStatus", status);
+    set((state) => {
+      const code = status?.state ?? null;
+      const running = code === 9;
+      const paused = code === 10;
+      const raceEnded = code === 11 ? true : (code === 0 ? false : state.meta.raceEnded);
+      const nextMeta = {
+        ...state.meta,
+        running,
+        paused,
+        statusCode: code,
+        statusDesc: status?.state_desc ?? state.meta.statusDesc,
+        raceEnded,
+      };
+
+      if (paused) {
+        nextMeta.pauseTs = Date.now();
+      } else if (state.meta.paused && running) {
+        const pauseDuration = state.meta.pauseTs ? Date.now() - state.meta.pauseTs : 0;
+        nextMeta.pauseAccum = (state.meta.pauseAccum ?? 0) + pauseDuration;
+        nextMeta.pauseTs = null;
+      }
+
+      if (status?.time !== undefined) {
+        nextMeta.timeRemaining = status.time;
+      }
+
+      if (code === 0) {
+        nextMeta.pauseTs = null;
+        nextMeta.pauseAccum = 0;
+        nextMeta.startTs = null;
+        nextMeta.timeRemaining = null;
+      } else if (running && !state.meta.running && !state.meta.startTs) {
+        nextMeta.startTs = Date.now();
+      }
+
+      return { meta: nextMeta };
+    });
   },
   setDuration: (ms) =>
     set((state) => ({ meta: { ...state.meta, durationMs: ms } })),
@@ -74,7 +119,7 @@ export const useGame = create((set, get) => ({
 
       set({
         results: { results: finalResults },
-        meta: { ...state.meta, running: false, raceEnded: true }
+        meta: { ...state.meta, running: false, paused: false, raceEnded: true }
       });
 
       playRaceEndSound();
@@ -134,6 +179,7 @@ export const useGame = create((set, get) => ({
         bonuses.rollAndApply(meta, players, order);
       }
 
+      meta.timeRemaining = packet.time ?? meta.timeRemaining;
       return { players, meta };
     });
     get().checkRaceEnd();
@@ -146,7 +192,19 @@ export const useGame = create((set, get) => ({
     set({
       players: {},
       results: null,
-      meta: { running: false, startTs: null, durationMs: null, lastBonusAt: 0, raceEnded: false },
+      meta: {
+        running: false,
+        paused: false,
+        startTs: null,
+        durationMs: null,
+        lastBonusAt: 0,
+        raceEnded: false,
+        statusCode: null,
+        statusDesc: null,
+        timeRemaining: null,
+        pauseAccum: 0,
+        pauseTs: null,
+      },
     }),
   setResults: (results) => set({ results }),
 }));

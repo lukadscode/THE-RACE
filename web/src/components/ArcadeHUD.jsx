@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useGame } from '../engine/gameState.js';
+import { normalizeColorHex } from '../utils/color.js';
 
 export default function ArcadeHUD() {
   const players = useGame((state) => state.players);
@@ -69,6 +70,16 @@ export default function ArcadeHUD() {
     }, 3000);
   };
 
+  const withAlpha = (hex, alpha) => {
+    const clampedAlpha = Math.max(0, Math.min(1, alpha));
+    const normalized = normalizeColorHex(hex);
+    const value = normalized.startsWith('#') ? normalized.slice(1) : normalized;
+    const alphaHex = Math.round(clampedAlpha * 255)
+      .toString(16)
+      .padStart(2, '0');
+    return `#${value}${alphaHex}`;
+  };
+
   if (results) {
     return null;
   }
@@ -98,10 +109,19 @@ export default function ArcadeHUD() {
         <div className="leaderboard-list">
           {board.slice(0, 8).map((p, i) => {
             const gapToLeader = leaderMeters - (p.effectiveMeters || 0);
+            const laneColor = normalizeColorHex(p.color || '#444444');
+            const tintedPrimary = withAlpha(laneColor, 0.55);
+            const tintedSecondary = withAlpha(laneColor, 0.25);
+            const glowColor = withAlpha(laneColor, 0.75);
             return (
               <div key={p.lane} className="leaderboard-item" style={{
-                background: i === 0 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(0, 0, 0, 0.5)',
-                borderLeft: `4px solid ${p.color}`
+                background: i === 0
+                  ? `linear-gradient(90deg, ${withAlpha('#ffd700', 0.4)} 0%, ${withAlpha('#ffd700', 0.18)} 60%, rgba(0, 0, 0, 0.45) 100%)`
+                  : `linear-gradient(90deg, ${tintedPrimary} 0%, ${tintedSecondary} 60%, rgba(0, 0, 0, 0.45) 100%)`,
+                borderLeft: `4px solid ${laneColor}`,
+                boxShadow: `0 0 18px ${glowColor}`,
+                color: '#f9f9f9',
+                textShadow: '0 0 6px rgba(0, 0, 0, 0.6)'
               }}>
                 <div className="item-position">{i + 1}</div>
                 <div className="item-name">{p.name}</div>

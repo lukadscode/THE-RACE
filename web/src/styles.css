@@ -207,7 +207,7 @@ body {
 
 .leaderboard-item:hover {
   transform: translateX(-5px);
-  box-shadow: 0 0 20px rgba(0, 255, 170, 0.3);
+  filter: brightness(1.08);
 }
 
 .item-position {

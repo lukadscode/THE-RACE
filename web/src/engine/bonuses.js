@@ -6,11 +6,12 @@
 // 5) shield: immunise (période)
 
 export function autoColor(i) {
-  // palette simple
-  const hues = [
-    200, 330, 40, 120, 260, 0, 300, 30, 180, 210, 15, 90, 270, 150, 20, 240,
-  ];
-  return `hsl(${hues[(i - 1) % hues.length]} 80% 60%)`;
+  const lane = Math.max(1, Number(i));
+  const goldenAngle = 137.508;
+  const hue = (lane * goldenAngle) % 360;
+  const sat = 70 + ((lane * 11) % 20); // 70-89%
+  const light = 45 + ((lane * 7) % 15); // 45-59%
+  return `hsl(${hue.toFixed(1)}, ${sat}%, ${light}%)`;
 }
 
 const NOW = () => Date.now();

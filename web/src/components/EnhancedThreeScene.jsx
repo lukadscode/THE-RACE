@@ -12,14 +12,15 @@ export default function EnhancedThreeScene() {
   const players = useGame((state) => state.players);
   const results = useGame((state) => state.results);
 
-  const sorted = useMemo(
-    () => {
-      const sorted = Object.values(players).sort((a, b) => a.lane - b.lane);
-      console.log("[EnhancedThreeScene] Sorted players:", sorted);
-      return sorted;
-    },
-    [players]
-  );
+  const sorted = useMemo(() => {
+    const sortedPlayers = Object.values(players).sort((a, b) => a.lane - b.lane);
+    console.log("[EnhancedThreeScene] Sorted players:", sortedPlayers);
+    return sortedPlayers;
+  }, [players]);
+
+  const laneNumbers = useMemo(() => sorted.map((p) => p.lane), [sorted]);
+  const laneMin = laneNumbers.length ? Math.min(...laneNumbers) : 1;
+  const laneMax = laneNumbers.length ? Math.max(...laneNumbers) : 1;
 
   const showPodium = results && results.results;
 
@@ -49,6 +50,8 @@ export default function EnhancedThreeScene() {
                 lane={p.lane}
                 meters={p.effectiveMeters || 0}
                 index={idx}
+                laneMin={laneMin}
+                laneMax={laneMax}
               />
             ))}
             <OrbitControls enablePan={false} />
