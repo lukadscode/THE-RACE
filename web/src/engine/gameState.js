@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { BONUS_INTERVAL_METERS, MAX_PLAYERS } from "./constants.js";
 import * as bonuses from "./bonuses.js";
+import { playRaceEndSound } from "../utils/AudioManager.js";
 
 export const useGame = create((set, get) => ({
   meta: {
@@ -8,6 +9,7 @@ export const useGame = create((set, get) => ({
     startTs: null,
     durationMs: null,
     lastBonusAt: 0,
+    raceEnded: false,
   },
   players: {}, // key: lane -> { lane, name, color, meters, watts, spm, effectiveMeters, shieldUntil, forcedCadenceUntil, metersMultiplierUntil, globalHalfUntil }
   raceDef: null,
@@ -23,6 +25,30 @@ export const useGame = create((set, get) => ({
     })),
   setDuration: (ms) =>
     set((state) => ({ meta: { ...state.meta, durationMs: ms } })),
+  checkRaceEnd: () => {
+    const state = get();
+    if (!state.meta.running || state.meta.raceEnded || !state.meta.durationMs) return;
+
+    const elapsed = Date.now() - state.meta.startTs;
+    if (elapsed >= state.meta.durationMs) {
+      const finalResults = Object.values(state.players)
+        .map(p => ({
+          lane: p.lane,
+          name: p.name,
+          meters: p.effectiveMeters || 0,
+          avgWatts: p.watts || 0,
+          avgSpm: p.spm || 0
+        }))
+        .sort((a, b) => b.meters - a.meters);
+
+      set({
+        results: { results: finalResults },
+        meta: { ...state.meta, running: false, raceEnded: true }
+      });
+
+      playRaceEndSound();
+    }
+  },
   applyRaceData: (packet) => {
     // packet = { data: [ { lane, meters, watts, spm, ... } ], time }
     set((state) => {
@@ -79,6 +105,7 @@ export const useGame = create((set, get) => ({
 
       return { players, meta };
     });
+    get().checkRaceEnd();
   },
   setName: (lane, name) =>
     set((state) => ({
@@ -88,7 +115,7 @@ export const useGame = create((set, get) => ({
     set({
       players: {},
       results: null,
-      meta: { running: false, startTs: null, durationMs: null, lastBonusAt: 0 },
+      meta: { running: false, startTs: null, durationMs: null, lastBonusAt: 0, raceEnded: false },
     }),
   setResults: (results) => set({ results }),
 }));
