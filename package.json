@@ -1,0 +1,21 @@
+{
+  "type": "module",
+  "name": "ergkart",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "relay": "node ./server/erg-relay.js",
+    "web": "npm -w web run dev",
+    "dev": "concurrently -k -n RELAY,WEB -c cyan,magenta \"npm run relay\" \"npm run web\"",
+    "demo": "cross-env DEMO=1 node ./server/erg-relay.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "cross-env": "^10.1.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
