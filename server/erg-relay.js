@@ -158,9 +158,13 @@ function startDemo() {
 }
 
 function startCustomDemo(config = {}) {
+  console.log("[relay] startCustomDemo called with config:", config);
+
   const lanes = config.numKarts || 8;
   const durationMs = config.duration || (7 * 60 * 1000 + 30 * 1000);
   const names = config.names || Array.from({ length: lanes }, (_, i) => `Player ${i + 1}`);
+
+  console.log(`[relay] Starting simulation: ${lanes} karts, ${durationMs}ms duration`);
 
   let meters = Array.from({ length: lanes }, () => 0);
   let watts = Array.from({ length: lanes }, () => 150 + Math.random() * 150);
@@ -180,10 +184,12 @@ function startCustomDemo(config = {}) {
     event_name: config.eventName || "ERGKART SIMULATION",
   };
 
+  console.log("[relay] Broadcasting race_definition");
   lastRaceDefinition = race_definition;
   broadcast("race_definition", race_definition);
   lastStatus = { state: 9, state_desc: "race running" };
   broadcast("race_status", lastStatus);
+  console.log("[relay] Race started, beginning tick loop");
   const start = Date.now();
 
   const tick = () => {
@@ -209,10 +215,12 @@ function startCustomDemo(config = {}) {
       time: Math.max(0, durationMs - t),
     };
     broadcast("race_data", data);
+
     if (t < durationMs && running) {
       currentSimulation.timeout = setTimeout(tick, 200);
     } else {
       running = false;
+      console.log("[relay] Simulation complete");
       broadcast("race_status", { state: 11, state_desc: "race complete" });
       currentSimulation = null;
     }

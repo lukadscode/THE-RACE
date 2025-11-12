@@ -13,10 +13,15 @@ export function connectRelay(simulationConfig = null) {
 
     if (simulationConfig) {
       console.log("[front] sending simulation config", simulationConfig);
-      ws.send(JSON.stringify({
-        type: "start_simulation",
-        config: simulationConfig
-      }));
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: "start_simulation",
+            config: simulationConfig
+          }));
+          console.log("[front] simulation config sent successfully");
+        }
+      }, 100);
     }
   };
 
